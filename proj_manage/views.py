@@ -124,7 +124,7 @@ def create_project(request):
         return redirect("logout")
 
 def project_page(request, project_id):
-    return HttpResponse(f"This is a placeholder for project id:{project_id}")
+    return HttpResponse(f"This is a placeholder for project id:{project_id}. And it workd!")
 
 def destroy_project(request, project_id):
 	destroy = Project.objects.get(id=project_id)
