@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <title>{{this_project.admin_user.first_name}} {{this_project.admin_user.last_name}}'s Project</title>
+</head>
+<body>
+
+    <div>
+        <div class="d-flex justify-content-between bg-success" style = "padding: 0 10px;">
+            <h1 class="text-center">{{this_project.project_name}} Page</h1>
+            <div class="d-flex justify-content-between" style = "width: 250px;">
+                <a href="/dashboard" class="btn btn-secondary" style = "margin-top: 7.45px; height: 40px;">Back</a>
+                <a href="/logout" class="btn btn-danger align-items-center" style = "margin-top: 7.45px; height: 40px;">Logout</a>
+            </div>
+        </div>
+        <div class="d-flex justify-content-around">
+            <div class="d-flex justify-content-around">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th scope="col">Task Name</th>
+                            <th scope="col">Description</th>
+                            <th scope="col">Task Owner</th>
+                            <th scope="col">Start Date</th>
+                            <th scope="col">Due Date</th>
+                            <th scope="col">Task Urgency</th>
+                            <th scope="col">Task Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for task in all_tasks %}
+                        <tr>
+                            <th scope="row">{{task.task_name}}</th>
+                            <td>{{task.task_desc}}</td>
+                            <td>{{task.task_owner}}</td>
+                            <td>{{task.task_start_date}}</td>
+                            <td>{{task.task_due_date}}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <form action="/create_task/{{this_project.id}}" method="post" class="col-4 p-5">
+                <h2 class="text-center">Create Task</h2>
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="task_name">Task Name:</label>
+                    <input type="text" name="task_name" class="form-control">
+                    <span class="text-danger">
+                        {% for message in messages %}
+                        {% if message.tags == 'task_name error' %}
+                        {{message}}
+                        {% endif %}
+                        {% endfor %}
+                    </span>
+                </div>
+                <div class="form-group">
+                    <label for="task_desc">Task Description:</label>
+                    <textarea name="task_desc" cols="20" rows="10" class="form-control"></textarea>
+                    <span class="text-danger">
+                        {% for message in messages %}
+                        {% if message.tags == 'task_desc error' %}
+                        {{message}}
+                        {% endif %}
+                        {% endfor %}
+                    </span>
+                </div>
+                <div class="form-group">
+                    <label for="task_owner">Task Owner</label>
+                    <select name="task_owner">
+                        <option value = "default">Select member</option>
+                        {% for member in all_members %}
+                        <option value="{{member.first_name}}">{{member.first_name}} {{member.last_name}}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="task_start_date">Task Start Date:</label>
+                    <input type="date" name="task_start_date">
+                </div>
+                <div class="form-group">
+                    <label for="task_due_date">Task Due Date:</label>
+                    <input type="date" name="task_due_date">
+                </div>
+                <input type="submit" value="Create Task" class="btn btn-primary">
+            </form>
+        </div>
+        <div class="d-inline" style = "width: 700px;">
+            <form action="/add_member/{{this_project.id}}" method="post" class="col-4 p-5">
+                <h5 class="text-center">Add Members!</h3>
+                {% csrf_token %}
+                <label for="member">Select Victim</label>
+                <select name="selected_user" class="form-control">
+                    {% for user in all_users %}
+                        <option value="{{user.id}}">{{user.first_name}} {{user.last_name}}</option>
+                    {% endfor %}
+                </select>
+                <div class="d-flex justify-content-around" >
+                    <div class="col-12 d-flex flex-column justify-content-around align-items-center">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Member Name</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for member in all_members %}
+                                <tr>
+                                    <th scope="row">{{ member.first_name }}</th>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <input type="submit" value="Add Member" class="btn btn-success my-2">
+            </form>
+            
+        </div>
+    </div>
+
+    <div class="d-flex">
+        <div class="col-6" style = "height:550px;width:550px;border:1px solid #ccc;font:16px/26px Georgia, Garamond, Serif;overflow:auto;">
+            {% for message in all_messages %}
+                <p>{{message.users.first_name}} {{message.users.last_name}} {{message.created_at}}</p>
+                <p>{{ message.message }}</p>
+                <div class = "col-10">
+                    <div class="col-10">
+                        {% for comment in all_comments %}
+                            {% if comment.message.id == message.id %}
+                                <p>{{ comment.user.first_name }} {{ comment.user.last_name }} {{ comment.created_at }}</p>
+                                <p>{{ comment.comment }}</p>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                    <form action="/post_comment/{{ message.id }}/{{ this_project.id }}" method="post" style= "width: 400px;">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label for="comment">Post a comment:</label>
+                            <textarea name="comment" rows="1" class="form-control"></textarea>
+                        </div>
+                        <input type="submit" value="Post a comment" class="btn btn-success">
+                    </form>
+                    
+                </div>
+            {% endfor %}
+        </div>
+        <div class="col-6 my-4" style = "margin: 0 auto;">
+            <form action="/post_message/{{this_project.id}}" method="post">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="message">Post a Message:</label>
+                    <textarea name="message" rows="5" class="form-control"></textarea>
+                </div>
+                <input type="submit" value="Post a message" class="btn btn-primary">
+            </form>
+        </div>
+    </div>
+    
+</body>
+</html>

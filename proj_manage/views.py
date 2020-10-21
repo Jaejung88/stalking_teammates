@@ -124,9 +124,69 @@ def create_project(request):
         return redirect("logout")
 
 def project_page(request, project_id):
-    return HttpResponse(f"This is a placeholder for project id:{project_id}. And it workd!")
+    this_project = Project.objects.get(id = project_id)
+    all_users = User.objects.all()
+    context = {
+        "all_users": all_users,
+        "this_project": this_project,
+        "all_members": this_project.member.all(),
+        "all_messages": Message.objects.all(),
+        "all_comments": Comment.objects.all(),
+        "all_tasks": Task.objects.all(),
+    }
+
+    return render(request, "project_page.html", context)
+
+def add_member(request, this_project_id):
+    this_project = Project.objects.get(id = this_project_id)
+    this_member = User.objects.get(id = request.POST["selected_user"])
+    this_project.member.add(this_member)
+
+    return redirect(f"/project_page/{this_project_id}")
+
+def post_message(request, this_project_id):
+    Message.objects.create(
+        message = request.POST["message"],
+        users = User.objects.get(id = request.session["user_id"])
+    )
+    
+    return redirect(f"/project_page/{this_project_id}")
+
+def post_comment(request, message_id, this_project_id):
+    Comment.objects.create(
+        comment = request.POST["comment"],
+        user = User.objects.get(id = request.session["user_id"]),
+        message = Message.objects.get(id = message_id)
+    )
+    return redirect(f"/project_page/{this_project_id}")
 
 def destroy_project(request, project_id):
 	destroy = Project.objects.get(id=project_id)
 	destroy.delete()
 	return redirect('/dashboard')
+
+def create_task(request, project_id):
+    if request.method == "POST":
+        errors = Task.objects.task_validator(request.POST)
+        if len(errors) > 0:
+            for key, value in errors.items():
+                messages.error(request, value, extra_tags=key)
+            return redirect(f'/project_page/{project_id}')
+        Task.objects.create(
+            task_name = request.POST['task_name'],
+            task_desc = request.POST['task_desc'],
+            task_owner = request.POST['task_owner'],
+            task_start_date = request.POST['task_start_date'],
+            task_due_date = request.POST['task_due_date'],
+            task_progress = 25,
+            project = Project.objects.get(id=project_id),
+            user = User.objects.get(id=request.session['user_id'])
+        )
+        return redirect(f'/project_page/{project_id}')
+    else:
+        return redirect('/dashboard')
+
+def destroy_task(request, project_id, task_id):
+    destroy = Task.objects.get(id=task_id)
+    destroy.delete()
+    return redirect(f'/project_page/{project_id}')
